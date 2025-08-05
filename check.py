@@ -7,7 +7,7 @@ from sklearn.preprocessing import LabelEncoder
 # -------------------------------
 # Setup and Training
 # -------------------------------
-df = pd.read_csv("C:\\Users\\Incorta\\Desktop\\breast_cancer\\breast_cancer_data (1).csv")
+df = pd.read_csv("breast_cancer_data (1).csv")
 
 # Encode 'diagnosis': M -> 1, B -> 0
 if df['diagnosis'].dtype == object:
@@ -78,4 +78,5 @@ st.markdown(
     "<p style='text-align: center; font-size: 13px;'>© 2025 - Breast Cancer Predictor | Built with Streamlit</p>",
     unsafe_allow_html=True
 )
+
 
