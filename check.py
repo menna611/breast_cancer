@@ -14,7 +14,7 @@ st.title("🧬 Breast Cancer Prediction from Lab Results Image")
 def load_and_train():
    df = pd.read_csv("breast_cancer_data.csv")
   # Make sure this CSV exists
-    df = df.dropna()
+   df = df.dropna()
     
     X = df.drop(['diagnosis', 'id', 'Unnamed: 32'], axis=1, errors='ignore')
     y = df['diagnosis'].map({'M': 1, 'B': 0})  # 1 = Malignant, 0 = Benign
@@ -59,4 +59,5 @@ if uploaded_file:
             st.success(f"🧾 Prediction Result: **{result}**")
     except Exception as e:
         st.error(f"⚠️ Could not parse the extracted text: {e}")
+
 
