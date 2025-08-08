@@ -1,57 +1,80 @@
 import streamlit as st
-import pytesseract
-from PIL import Image
-import numpy as np
 import pandas as pd
-from sklearn.datasets import load_breast_cancer
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.preprocessing import LabelEncoder
 
-# 📝 Title
-st.title("🧬 Breast Cancer Prediction from Lab Results Image")
-st.write("Upload an image of lab results and the app will predict whether the case is **Malignant (M)** or **Benign (B)**.")
+# -------------------------------
+# Setup and Training
+# -------------------------------
+df = pd.read_csv("breast_cancer_data (1).csv")
 
-# 📦 Load dataset and train model
-@st.cache_resource
-def train_model():
-    data = load_breast_cancer()
-    X = pd.DataFrame(data.data, columns=data.feature_names)
-    y = pd.Series(data.target)  # 0 = malignant, 1 = benign
+# Encode 'diagnosis': M -> 1, B -> 0
+if df['diagnosis'].dtype == object:
+    le = LabelEncoder()
+    df['diagnosis'] = le.fit_transform(df['diagnosis'])
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    return model, data.feature_names
+# Drop irrelevant columns
+df = df.drop(columns=['id', 'Unnamed: 32'], errors='ignore')
 
-model, feature_names = train_model()
+X = df.drop('diagnosis', axis=1)
+y = df['diagnosis']
 
-# 📤 Upload image
-uploaded_file = st.file_uploader("📷 Upload image of lab results", type=["png", "jpg", "jpeg"])
+# Train model
+model = DecisionTreeClassifier(max_depth=5, random_state=42)
+model.fit(X, y)
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_column_width=True)
+# -------------------------------
+# Streamlit UI
+# -------------------------------
+# Page config
+st.set_page_config(page_title="Breast Cancer Detector", page_icon="🩺", layout="wide")
 
-    # 🔍 OCR to extract text
-    extracted_text = pytesseract.image_to_string(image)
-    st.subheader("📝 Extracted Text:")
-    st.text(extracted_text)
+# Sidebar
+st.sidebar.title("ℹ About the App")
+st.sidebar.markdown("""
+This app uses a *Decision Tree Classifier* to predict whether a breast tumor is *Malignant (M)* or *Benign (B)* based on lab results.  
+- Built with ❤ using Streamlit  
+- Powered by scikit-learn  
+""")
 
-    # ✍️ Let user adjust values
-    st.subheader("✏️ Enter or correct extracted values")
-    values_input = st.text_area(
-        "Paste the numbers here (separated by spaces):",
-        value=" ".join([str(round(x, 2)) for x in np.random.rand(len(feature_names))])
-    )
+st.sidebar.write("📊 Features used:")
+st.sidebar.write(list(X.columns))
 
-    try:
-        values = [float(val) for val in values_input.strip().split()]
-        if len(values) != len(feature_names):
-            st.error(f"❌ Expected {len(feature_names)} values, but got {len(values)}.")
-        else:
-            input_df = pd.DataFrame([values], columns=feature_names)
-            prediction = model.predict(input_df)[0]
-            result = "Benign (B)" if prediction == 1 else "Malignant (M)"
-            st.success(f"🧾 Prediction Result: **{result}**")
-    except ValueError:
-        st.error("⚠️ Please enter only numbers separated by spaces.")
+# Title
+st.markdown("<h1 style='text-align: center; color: #5C4B99;'>🔬 Breast Cancer Prediction</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Enter lab values below to get an instant diagnosis prediction.</p>", unsafe_allow_html=True)
+
+st.divider()
+
+# Input form
+st.subheader("📥 Enter Lab Results")
+user_input = {}
+cols = st.columns(3)  # arrange inputs in 3 columns
+
+for i, col in enumerate(X.columns):
+    with cols[i % 3]:
+        user_input[col] = st.number_input(f"{col}", value=float(round(X[col].mean(), 2)))
+
+# Prediction
+if st.button("🧪 Predict Diagnosis"):
+    input_df = pd.DataFrame([user_input])
+    prediction = model.predict(input_df)[0]
+    result = "Malignant (M)" if prediction == 1 else "Benign (B)"
+
+    # Output
+    st.markdown("### 🧾 Prediction Result")
+    if prediction == 1:
+        st.error("🚨 The tumor is *Malignant (M)*. Please consult a specialist.")
+    else:
+        st.success("✅ The tumor is *Benign (B)*. No signs of malignancy detected.")
+
+    with st.expander("🔎 View Input Summary"):
+        st.dataframe(input_df.style.format("{:.2f}"), use_container_width=True)
+
+# Footer
+st.divider()
+st.markdown(
+    "<p style='text-align: center; font-size: 13px;'>© 2025 - Breast Cancer Predictor | Built with Streamlit</p>",
+    unsafe_allow_html=True
+)
