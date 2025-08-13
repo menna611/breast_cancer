@@ -23,10 +23,9 @@ The dataset used is the **Breast Cancer Wisconsin (Diagnostic)
 
 ## Machine Learning Models
 The following models were implemented:
-
-1. **Logistic Regression** – baseline classification model.  
-2. **Random Forest Classifier** – ensemble model for better accuracy.  
-3. **Decision Tree Classifier** – interpretable model for decision paths.  
+  
+1. **Random Forest Classifier** – ensemble model for better accuracy.  
+2. **Decision Tree Classifier** – interpretable model for decision paths.  
 
 **Performance Metrics:**
 - Accuracy  
